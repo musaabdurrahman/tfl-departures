@@ -21,7 +21,7 @@ def home():
 
         <style>
             body {
-                background: #111;
+                background: #000;
                 color: white;
                 font-family: Arial, sans-serif;
                 margin: 0;
@@ -29,32 +29,60 @@ def home():
             }
 
             .board {
-                max-width: 900px;
+                max-width: 1000px;
                 margin: auto;
-                background: #222;
-                padding: 30px;
-                border-radius: 10px;
+                background: #111;
+                border: 3px solid #333;
             }
 
-            h1 {
-                margin-top: 0;
+            .header {
+                padding: 25px 30px;
+                border-bottom: 3px solid #333;
+            }
+
+            .station {
+                font-size: 36px;
+                font-weight: bold;
+            }
+
+            .subtitle {
+                color: #aaa;
+                margin-top: 8px;
+            }
+
+            .column-headings {
+                display: grid;
+                grid-template-columns: 1fr 250px 120px;
+                padding: 15px 30px;
+                color: #aaa;
+                border-bottom: 1px solid #333;
             }
 
             .train {
-                display: flex;
-                justify-content: space-between;
-                padding: 18px 10px;
-                border-bottom: 1px solid #555;
-                font-size: 20px;
+                display: grid;
+                grid-template-columns: 1fr 250px 120px;
+                padding: 22px 30px;
+                border-bottom: 1px solid #333;
+                font-size: 22px;
+            }
+
+            .destination {
+                font-weight: bold;
+            }
+
+            .platform {
+                color: #ccc;
             }
 
             .time {
                 font-weight: bold;
+                text-align: right;
             }
 
             .live {
-                margin-top: 20px;
+                padding: 15px 30px;
                 color: #aaa;
+                font-size: 14px;
             }
         </style>
     </head>
@@ -63,14 +91,34 @@ def home():
 
         <div class="board">
 
-            <h1>Arsenal</h1>
+            <div class="header">
+            
+                <div class="station">King's Cross St. Pancras</div>
+            
+                <div class="subtitle">Live departures</div>
+            
+                <div style="margin-top: 15px;">
+                    <label for="platform">Platform: </label>
+            
+                    <select id="platform" onchange="loadDepartures()">
+                        <option value="">All platforms</option>
+                    </select>
+                </div>
+            
+            </div>
+
+            <div class="column-headings">
+                <span>DESTINATION</span>
+                <span>PLATFORM</span>
+                <span>TIME</span>
+            </div>
 
             <div id="departures">
                 Loading departures...
             </div>
 
             <div class="live">
-                ● LIVE
+                ● LIVE — Updates every 30 seconds
             </div>
 
         </div>
@@ -79,7 +127,15 @@ def home():
 
             async function loadDepartures() {
 
-                const response = await fetch("/departures");
+               const platform = document.getElementById("platform").value;
+
+                let url = "/departures";
+
+                if (platform) {
+                    url += "?platform=" + encodeURIComponent(platform);
+                }
+
+                const response = await fetch(url);
                 const trains = await response.json();
 
                 const container = document.getElementById("departures");
@@ -88,7 +144,9 @@ def home():
 
                 trains.forEach(train => {
 
-                    const minutes = Math.floor(train.timeToStation / 60);
+                    const minutes = Math.floor(
+                        train.timeToStation / 60
+                    );
 
                     let time;
 
@@ -100,15 +158,46 @@ def home():
 
                     container.innerHTML += `
                         <div class="train">
-                            <span>${train.destination}</span>
-                            <span>${time}</span>
+                            <span class="destination">
+                                ${train.destination}
+                            </span>
+
+                            <span class="platform">
+                                ${train.platform}
+                            </span>
+
+                            <span class="time">
+                                ${time}
+                            </span>
                         </div>
                     `;
                 });
             }
 
+            async function loadPlatforms() {
+            
+                const response = await fetch("/departures");
+                const trains = await response.json();
+            
+                const select = document.getElementById("platform");
+            
+                const platforms = [
+                    ...new Set(trains.map(train => train.platform))
+                ];
+            
+                platforms.forEach(platform => {
+            
+                    const option = document.createElement("option");
+            
+                    option.value = platform;
+                    option.textContent = platform;
+            
+                    select.appendChild(option);
+                });
+            }
+            
             loadDepartures();
-
+            loadPlatforms();
             setInterval(loadDepartures, 30000);
 
         </script>
@@ -116,10 +205,8 @@ def home():
     </body>
     </html>
     """
-
-
 @app.get("/departures")
-def get_departures():
+def get_departures(platform: str = None):
 
     url = "https://api.tfl.gov.uk/StopPoint/940GZZLUKSX/Arrivals"
 
@@ -130,6 +217,12 @@ def get_departures():
     response = requests.get(url, params=params)
 
     data = response.json()
+
+    if platform:
+        data = [
+            train for train in data
+            if train.get("platformName") == platform
+        ]
 
     data.sort(key=lambda train: train["timeToStation"])
 
@@ -142,7 +235,7 @@ def get_departures():
                 "destinationName",
                 train.get("towards", "Unknown")
             ),
-            "platform": train["platformName"],
+            "platform": train.get("platformName", "Unknown"),
             "timeToStation": train["timeToStation"]
         })
 
