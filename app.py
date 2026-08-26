@@ -50,20 +50,27 @@ def home():
                 margin-top: 8px;
             }
 
+            .line {
+                font-size: 16px;
+                line-height: 1.2;
+            }
+
             .column-headings {
                 display: grid;
-                grid-template-columns: 1fr 250px 120px;
-                padding: 15px 30px;
+                grid-template-columns: 150px 1fr 220px 80px;
+                padding: 0 10px 10px 10px;
+                margin-top: 25px;
                 color: #aaa;
-                border-bottom: 1px solid #333;
+                font-size: 14px;
             }
 
             .train {
                 display: grid;
-                grid-template-columns: 1fr 250px 120px;
-                padding: 22px 30px;
-                border-bottom: 1px solid #333;
-                font-size: 22px;
+                grid-template-columns: 120px 1fr 220px 80px;
+                align-items: center;
+                padding: 18px 10px;
+                border-bottom: 1px solid #555;
+                font-size: 20px;
             }
 
             .destination {
@@ -96,10 +103,21 @@ def home():
                 <div class="station">King's Cross St. Pancras</div>
             
                 <div class="subtitle">Live departures</div>
+
+                
+                    <div style="margin-top: 15px;">
+                        <label for="station">Station: </label>
+                    
+                        <select id="station" onchange="changeStation()">
+                            <option value="940GZZLUKSX">King's Cross St. Pancras</option>
+                            <option value="940GZZLUASL">Arsenal</option>
+                            <option value="940GZZLUVIC">Victoria</option>
+                        </select>
+                    </div>
             
-                <div style="margin-top: 15px;">
-                    <label for="platform">Platform: </label>
-            
+                    <div style="margin-top: 15px;">
+                        <label for="platform">Platform: </label>
+
                     <select id="platform" onchange="loadDepartures()">
                         <option value="">All platforms</option>
                     </select>
@@ -108,6 +126,7 @@ def home():
             </div>
 
             <div class="column-headings">
+                <span>LINE</span>
                 <span>DESTINATION</span>
                 <span>PLATFORM</span>
                 <span>TIME</span>
@@ -127,18 +146,30 @@ def home():
 
             async function loadDepartures() {
 
-               const platform = document.getElementById("platform").value;
+                const station = document.getElementById("station").value;
+                const platform = document.getElementById("platform").value;
+                
+                let url = "/departures?station=" + station;
 
-                let url = "/departures";
 
                 if (platform) {
-                    url += "?platform=" + encodeURIComponent(platform);
+                    url += "&platform=" + encodeURIComponent(platform);
                 }
 
                 const response = await fetch(url);
                 const trains = await response.json();
 
                 const container = document.getElementById("departures");
+
+                if (trains.error) {
+                    container.innerHTML = `
+                        <div class="train">
+                            <span>Unable to load departures</span>
+                        </div>
+                    `;
+                    return;
+                }
+
 
                 container.innerHTML = "";
 
@@ -158,28 +189,59 @@ def home():
 
                     container.innerHTML += `
                         <div class="train">
+                        
+                            <span class="line">
+                                ${train.line}
+                            </span>
+                        
                             <span class="destination">
                                 ${train.destination}
                             </span>
-
+                        
                             <span class="platform">
                                 ${train.platform}
                             </span>
-
+                        
                             <span class="time">
                                 ${time}
                             </span>
+                        
                         </div>
                     `;
                 });
             }
 
+            async function changeStation() {
+            
+                const station = document.getElementById("station");
+            
+                const stationName =
+                    station.options[station.selectedIndex].text;
+            
+                document.querySelector(".station").textContent = stationName;
+            
+                await loadPlatforms();
+            
+                await loadDepartures();
+            }
+
+
             async function loadPlatforms() {
             
-                const response = await fetch("/departures");
-                const trains = await response.json();
+                const station = document.getElementById("station").value;
             
+                const response = await fetch(
+                    "/departures?station=" + station
+                );
+            
+                const trains = await response.json();
+
+                
                 const select = document.getElementById("platform");
+            
+                select.innerHTML = `
+                    <option value="">All platforms</option>
+                `;
             
                 const platforms = [
                     ...new Set(trains.map(train => train.platform))
@@ -206,9 +268,12 @@ def home():
     </html>
     """
 @app.get("/departures")
-def get_departures(platform: str = None):
+def get_departures(
+    station: str = "940GZZLUKSX",
+    platform: str = None
+):
 
-    url = "https://api.tfl.gov.uk/StopPoint/940GZZLUKSX/Arrivals"
+    url = f"https://api.tfl.gov.uk/StopPoint/{station}/Arrivals"
 
     params = {
         "app_key": api_key
@@ -216,6 +281,9 @@ def get_departures(platform: str = None):
 
     response = requests.get(url, params=params)
 
+    if response.status_code != 200:
+        return {"error": "Unable to get departures from TfL"}
+    
     data = response.json()
 
     if platform:
@@ -236,6 +304,7 @@ def get_departures(platform: str = None):
                 train.get("towards", "Unknown")
             ),
             "platform": train.get("platformName", "Unknown"),
+            "line": train.get("lineName", "Unknown"),
             "timeToStation": train["timeToStation"]
         })
 
