@@ -173,6 +173,16 @@ def home():
 
                 container.innerHTML = "";
 
+                const now = new Date();
+                
+                document.querySelector(".live").textContent =
+                    "● LIVE · Updated " +
+                    now.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
+
+                
                 trains.forEach(train => {
 
                     const minutes = Math.floor(
