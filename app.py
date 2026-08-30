@@ -51,8 +51,64 @@ def home():
             }
 
             .line {
-                font-size: 16px;
-                line-height: 1.2;
+                display: inline-block;
+                padding: 6px 10px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+                line-height: 1;
+                width: fit-content;
+            }
+
+            .line.bakerloo {
+                background: #B26300;
+            }
+            
+            .line.central {
+                background: #DC241F;
+            }
+            
+            .line.circle {
+                background: #FFD329;
+                color: #000;
+            }
+            
+            .line.district {
+                background: #007D32;
+            }
+            
+            .line.hammersmith-city {
+                background: #F3A9BB;
+                color: #000;
+            }
+            
+            .line.jubilee {
+                background: #A0A5A9;
+            }
+            
+            .line.metropolitan {
+                background: #9B0056;
+            }
+            
+            .line.northern {
+                background: #000;
+            }
+            
+            .line.piccadilly {
+                background: #003688;
+            }
+            
+            .line.victoria {
+                background: #0098D4;
+            }
+            
+            .line.waterloo-city {
+                background: #95CDBA;
+                color: #000;
+            }
+            
+            .line.elizabeth {
+                background: #6950A1;
             }
 
             .column-headings {
@@ -144,6 +200,27 @@ def home():
 
         <script>
 
+
+            function getLineClass(line) {
+            
+                const lineClasses = {
+                    "Bakerloo": "bakerloo",
+                    "Central": "central",
+                    "Circle": "circle",
+                    "District": "district",
+                    "Hammersmith & City": "hammersmith-city",
+                    "Jubilee": "jubilee",
+                    "Metropolitan": "metropolitan",
+                    "Northern": "northern",
+                    "Piccadilly": "piccadilly",
+                    "Victoria": "victoria",
+                    "Waterloo & City": "waterloo-city",
+                    "Elizabeth line": "elizabeth"
+                };
+            
+                return lineClasses[line] || "unknown";
+            }
+        
             async function loadDepartures() {
 
                 const station = document.getElementById("station").value;
@@ -200,7 +277,7 @@ def home():
                     container.innerHTML += `
                         <div class="train">
                         
-                            <span class="line">
+                            <span class="line ${getLineClass(train.line)}">
                                 ${train.line}
                             </span>
                         
@@ -241,21 +318,16 @@ def home():
                 const station = document.getElementById("station").value;
             
                 const response = await fetch(
-                    "/departures?station=" + station
+                    "/platforms?station=" + station
                 );
             
-                const trains = await response.json();
-
-                
+                const platforms = await response.json();
+            
                 const select = document.getElementById("platform");
             
                 select.innerHTML = `
                     <option value="">All platforms</option>
                 `;
-            
-                const platforms = [
-                    ...new Set(trains.map(train => train.platform))
-                ];
             
                 platforms.forEach(platform => {
             
@@ -299,9 +371,8 @@ def get_departures(
     if platform:
         data = [
             train for train in data
-            if train.get("platformName") == platform
+            if platform in train.get("platformName", "")
         ]
-
     data.sort(key=lambda train: train["timeToStation"])
 
     departures = []
@@ -319,3 +390,35 @@ def get_departures(
         })
 
     return departures
+
+@app.get("/platforms")
+def get_platforms(
+    station: str = "940GZZLUKSX"
+):
+
+    url = f"https://api.tfl.gov.uk/StopPoint/{station}/Arrivals"
+
+    params = {
+        "app_key": api_key
+    }
+
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        return {"error": "Unable to get platforms from TfL"}
+
+    data = response.json()
+
+    platforms = set()
+
+    for train in data:
+
+        platform_name = train.get("platformName")
+
+        if platform_name and "Platform " in platform_name:
+
+            platform = platform_name.split("Platform ")[-1]
+
+            platforms.add("Platform " + platform)
+
+    return sorted(platforms)
