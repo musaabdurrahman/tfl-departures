@@ -6,7 +6,7 @@ load_dotenv()
 
 api_key = os.getenv("TFL_API_KEY")
 
-url = "https://api.tfl.gov.uk/StopPoint/940GZZLUKSX/Arrivals"
+url = "https://api.tfl.gov.uk/StopPoint/Mode/tube"
 
 response = requests.get(
     url,
@@ -17,14 +17,8 @@ print(response.status_code)
 
 data = response.json()
 
-platforms = sorted(
-    set(
-        train.get("platformName", "Unknown")
-        for train in data
-        if train.get("platformName")
-    )
-)
+print("Response type:", type(data))
+print("Keys:", data.keys())
 
-print("\nPLATFORMS:")
-for platform in platforms:
-    print(platform)
+print("\nResponse:")
+print(data)

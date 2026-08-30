@@ -165,9 +165,7 @@ def home():
                         <label for="station">Station: </label>
                     
                         <select id="station" onchange="changeStation()">
-                            <option value="940GZZLUKSX">King's Cross St. Pancras</option>
-                            <option value="940GZZLUASL">Arsenal</option>
-                            <option value="940GZZLUVIC">Victoria</option>
+                            <option value="">Loading stations...</option>
                         </select>
                     </div>
             
@@ -312,6 +310,35 @@ def home():
                 await loadDepartures();
             }
 
+            async function loadStations() {
+            
+                const response = await fetch("/stations");
+                const stations = await response.json();
+            
+                const select = document.getElementById("station");
+            
+                select.innerHTML = "";
+            
+                if (stations.error) {
+                    select.innerHTML = `
+                        <option value="">Unable to load stations</option>
+                    `;
+                    return;
+                }
+            
+                stations.forEach(station => {
+            
+                    const option = document.createElement("option");
+            
+                    option.value = station.id;
+                    option.textContent = station.name;
+            
+                    select.appendChild(option);
+                });
+            
+                changeStation();
+            }
+
 
             async function loadPlatforms() {
             
@@ -340,8 +367,7 @@ def home():
                 });
             }
             
-            loadDepartures();
-            loadPlatforms();
+            loadStations();
             setInterval(loadDepartures, 30000);
 
         </script>
@@ -349,6 +375,44 @@ def home():
     </body>
     </html>
     """
+
+
+@app.get("/stations")
+def get_stations():
+
+    url = "https://api.tfl.gov.uk/StopPoint/Mode/tube"
+
+    params = {
+        "app_key": api_key
+    }
+
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        return {"error": "Unable to get Tube stations from TfL"}
+
+    data = response.json()
+
+    stations = []
+
+    for stop in data.get("stopPoints", []):
+
+        stop_id = stop.get("id", "")
+        name = stop.get("commonName", "")
+
+        if stop_id.startswith("940GZZLU"):
+            stations.append({
+                "id": stop_id,
+                "name": name
+            })
+
+    stations.sort(key=lambda station: station["name"])
+
+    return stations
+
+
+
+
 @app.get("/departures")
 def get_departures(
     station: str = "940GZZLUKSX",
