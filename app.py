@@ -441,7 +441,7 @@ def get_departures(
 
     departures = []
 
-    for train in data[:3]:
+    for train in data[:5]:
 
         departures.append({
             "destination": train.get(
