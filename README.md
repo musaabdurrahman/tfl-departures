@@ -10,7 +10,7 @@ Built with **FastAPI** and the official **[TfL Unified API](https://api-portal.t
 
 - **Every Tube station**: the station list is pulled straight from TfL, sorted A–Z
 - **Platform filter**: platforms are detected dynamically for whichever station you pick
-- **Next 3 departures** with destination, platform and time to arrival ("Due" when under a minute)
+- **Next 5 departures** with destination, platform and time to arrival ("Due" when under a minute)
 - **Official line colours** for all 11 Tube lines, plus the Elizabeth line
 - **Auto-refresh** every 30 seconds, with an "Updated HH:MM" timestamp
 
