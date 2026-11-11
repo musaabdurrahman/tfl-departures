@@ -344,7 +344,8 @@ def home():
             
                     select.appendChild(option);
                 });
-            
+
+                select.value = "940GZZLUKSX";
                 changeStation();
             }
 
