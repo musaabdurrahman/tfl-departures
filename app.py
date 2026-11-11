@@ -58,6 +58,7 @@ def home():
                 font-weight: bold;
                 line-height: 1;
                 width: fit-content;
+                white-space: nowrap;
             }
 
             .line.bakerloo {
@@ -84,6 +85,7 @@ def home():
             
             .line.jubilee {
                 background: #A0A5A9;
+                color: #000;
             }
             
             .line.metropolitan {
@@ -92,6 +94,7 @@ def home():
             
             .line.northern {
                 background: #000;
+                box-shadow: inset 0 0 0 1px #fff;
             }
             
             .line.piccadilly {
@@ -111,9 +114,14 @@ def home():
                 background: #6950A1;
             }
 
+            .line.unknown {
+                background: #444;
+            }
+
             .column-headings {
                 display: grid;
-                grid-template-columns: 150px 1fr 220px 80px;
+                grid-template-columns: 170px 1fr 220px 80px;
+                column-gap: 16px;
                 padding: 0 10px 10px 10px;
                 margin-top: 25px;
                 color: #aaa;
@@ -122,7 +130,8 @@ def home():
 
             .train {
                 display: grid;
-                grid-template-columns: 120px 1fr 220px 80px;
+                grid-template-columns: 170px 1fr 220px 80px;
+                column-gap: 16px;
                 align-items: center;
                 padding: 18px 10px;
                 border-bottom: 1px solid #555;
@@ -408,6 +417,7 @@ def get_stations():
 
     stations.sort(key=lambda station: station["name"])
 
+    print(len(stations))
     return stations
 
 
