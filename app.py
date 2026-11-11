@@ -407,7 +407,7 @@ def get_stations():
     for stop in data.get("stopPoints", []):
 
         stop_id = stop.get("id", "")
-        name = stop.get("commonName", "")
+        name = stop.get("commonName", "").replace(" Underground Station", "")
 
         if stop_id.startswith("940GZZLU"):
             stations.append({
@@ -417,7 +417,6 @@ def get_stations():
 
     stations.sort(key=lambda station: station["name"])
 
-    print(len(stations))
     return stations
 
 
@@ -453,12 +452,11 @@ def get_departures(
 
     for train in data[:5]:
 
+        destination = train.get("destinationName", train.get("towards", "Unknown"))
+        destination = destination.replace(" Underground Station", "").replace(" (H&C Line)", "")
+
         departures.append({
-            "destination": train.get(
-                "destinationName",
-                train.get("towards", "Unknown")
-            ),
-            "platform": train.get("platformName", "Unknown"),
+            "destination": destination,
             "line": train.get("lineName", "Unknown"),
             "timeToStation": train["timeToStation"]
         })
