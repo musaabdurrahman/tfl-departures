@@ -457,6 +457,7 @@ def get_departures(
 
         departures.append({
             "destination": destination,
+            "platform": train.get("platformName", "Unknown"),
             "line": train.get("lineName", "Unknown"),
             "timeToStation": train["timeToStation"]
         })
