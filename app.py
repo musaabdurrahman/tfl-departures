@@ -180,7 +180,15 @@ def home():
             .dot {
                 color: #00c853;
             }
-            
+
+            .message {
+                padding: 30px 20px;
+                color: #aaa;
+                font-size: 18px;
+                text-align: center;
+                border-bottom: 1px solid #555;
+            }
+
         </style>
     </head>
 
@@ -270,9 +278,7 @@ def home():
 
                 if (trains.error) {
                     container.innerHTML = `
-                        <div class="train">
-                            <span>Unable to load departures</span>
-                        </div>
+                        <div class="message">Unable to load departures. Retrying in 30 seconds.</div>
                     `;
                     return;
                 }
@@ -289,7 +295,13 @@ def home():
                         minute: "2-digit"
                     });
 
-                
+                if (trains.length === 0) {
+                    container.innerHTML = `
+                        <div class="message">No departures right now</div>
+                    `;
+                    return;
+                }
+
                 trains.forEach(train => {
 
                     const minutes = Math.floor(
@@ -388,7 +400,9 @@ def home():
                 select.innerHTML = `
                     <option value="">All platforms</option>
                 `;
-            
+
+                if (platforms.error) return;
+
                 platforms.forEach(platform => {
             
                     const option = document.createElement("option");
