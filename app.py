@@ -156,6 +156,31 @@ def home():
                 color: #aaa;
                 font-size: 14px;
             }
+
+
+            .control {
+                margin-top: 15px;
+            }
+
+            .control label {
+                display: inline-block;
+                width: 80px;
+                color: #ccc;
+            }
+
+            select {
+                background: #222;
+                color: #fff;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 6px 8px;
+                font-size: 15px;
+            }
+
+            .dot {
+                color: #00c853;
+            }
+            
         </style>
     </head>
 
@@ -170,17 +195,15 @@ def home():
                 <div class="subtitle">Live departures</div>
 
                 
-                    <div style="margin-top: 15px;">
-                        <label for="station">Station: </label>
-                    
-                        <select id="station" onchange="changeStation()">
-                            <option value="">Loading stations...</option>
-                        </select>
-                    </div>
-            
-                    <div style="margin-top: 15px;">
-                        <label for="platform">Platform: </label>
+                <div class="control">
+                    <label for="station">Station:</label>
+                    <select id="station" onchange="changeStation()">
+                        <option value="">Loading stations...</option>
+                    </select>
+                </div>
 
+                <div class="control">
+                    <label for="platform">Platform:</label>
                     <select id="platform" onchange="loadDepartures()">
                         <option value="">All platforms</option>
                     </select>
@@ -200,7 +223,7 @@ def home():
             </div>
 
             <div class="live">
-                ● LIVE — Updates every 30 seconds
+                <span class="dot">●</span> LIVE — Updates every 30 seconds
             </div>
 
         </div>
@@ -259,8 +282,8 @@ def home():
 
                 const now = new Date();
                 
-                document.querySelector(".live").textContent =
-                    "● LIVE · Updated " +
+                document.querySelector(".live").innerHTML =
+                    '<span class="dot">●</span> LIVE · Updated ' +
                     now.toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit"
